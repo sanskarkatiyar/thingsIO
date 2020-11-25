@@ -6,7 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
     <meta name="generator" content="Jekyll v4.1.1">
-    <title>Register</title>
+    <title>Sign-in</title>
 
     <!-- <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/sign-in/"> -->
 
@@ -24,7 +24,9 @@
     <meta name="theme-color" content="#563d7c">
 
     <!-- Custom styles for this template -->
-    <link href="../static/signin.css" rel="stylesheet">
+    <!-- <link href="../static/signin.css" rel="stylesheet"> -->
+    <link href="{{ url_for('static', filename='signin.css') }}" rel="stylesheet">
+
   </head>
 
   <body class="text-center">
@@ -34,24 +36,19 @@
         <path fill-rule="evenodd" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707zm2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 0 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708zm5.656-.708a.5.5 0 0 1 .708 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.708-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708zm2.122-2.12a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.313.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zM6 8a2 2 0 1 1 2.5 1.937V15.5a.5.5 0 0 1-1 0V9.937A2 2 0 0 1 6 8z"/>
       </svg>
 
-      <h1 class="h3 mb-3 font-weight-normal">Register</h1>
+      <h1 class="h3 mb-3 font-weight-normal">Sign-in</h1>
 
-      <!-- Modify callouts below using flask templates -->
-      <div class="alert alert-danger" role="alert" id="registerError" hidden>
-        Username already exists!
-      </div>
-
-      <div class="alert alert-success" role="alert" id="registerSuccess" hidden>
-        Succesfully registered!
+      <!-- Modify callout below using flask template -->
+      <div class="alert alert-danger" role="alert" id="loginError" hidden>
+        Username or Password is invalid!
       </div>
 
       <label for="inputUsername" class="sr-only">Username</label>
       <input type="text" id="inputUsername" class="form-control" placeholder="Username" required autofocus>
       <label for="inputPassword" class="sr-only">Password</label>
       <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
-
-      <button class="btn btn-lg btn-primary btn-block" type="button">Register</button>
-      <button class="btn btn-lg btn-outline-info btn-block" type="submit">Sign in</button>
+      <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+      <button class="btn btn-lg btn-outline-info btn-block" type="button">Register</button>
 
     </form>
 </body>
