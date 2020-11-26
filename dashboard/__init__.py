@@ -1,5 +1,8 @@
 import os
+from flask import flash
+from flask import g
 from flask import Flask
+from flask import render_template
 
 def create_app(test_config=None):
     """Create and configure an instance of the Flask application."""
@@ -24,7 +27,7 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    @app.route("/test")
+    @app.route("/test", methods=["GET", "POST"])
     def test_route():
         return "This is a test route!"
 
@@ -34,15 +37,15 @@ def create_app(test_config=None):
     # db.init_app(app)
 
     # apply the blueprints to the app
-    from dashboard import auth, dash
+    from dashboard import auth #, dash
 
     app.register_blueprint(auth.bp)
-    app.register_blueprint(dash.bp)
+    # app.register_blueprint(dash.bp)
 
     # make url_for('index') == url_for('blog.index')
     # in another app, you might define a separate main index here with
     # app.route, while giving the blog blueprint a url_prefix, but for
     # the tutorial the blog will be the main index
-    app.add_url_rule("/", endpoint="index")
+    app.add_url_rule("/", endpoint="auth.login")
 
     return app

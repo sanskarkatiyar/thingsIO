@@ -2,6 +2,9 @@
 # with minor modifications for database access
 
 import functools
+import os
+import redis
+import sys
 
 from flask import Blueprint
 from flask import flash
@@ -15,8 +18,10 @@ from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
 # TODO: add database, message queue access
-import dashboard.tools.db_handler as db
-import dashboard.tools.mq_handler as mq
+import dashboard.tools.accounts_handler as accounts_handler
+# import . tools.mq_handler as mq
+
+users_db = accounts_handler.accounts_handler(1)
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -37,18 +42,21 @@ def login_required(view):
 def load_logged_in_user():
     """If a user id is stored in the session, load the user object from
     the database into ``g.user``."""
-    user_id = session.get("user_id")
+    uname = session.get("username")
 
-    if user_id is None:
+    if uname is None:
         g.user = None
     else:
+        pass
+        # g.user = uname # TODO: create alias, probably not safe
+        # redirect(url_for('test_route'))
         # TODO: store the details of the user - not the password though. Why password?
-        g.user = (
-            get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
-        )
+        # g.user = (
+        #     get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
+        # )
 
 
-@bp.route("/register", methods=("GET", "POST"))
+@bp.route("/register", methods=["GET", "POST"])
 def register():
     """Register a new user.
 
@@ -56,58 +64,53 @@ def register():
     password for security.
     """
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        db = get_db()
+        username = request.form["inputUsername"]
+        password = request.form["inputPassword"]
         error = None
 
         if not username:
-            error = "Username is required."
+            error = "inputEmpty"
         elif not password:
-            error = "Password is required."
-        elif (
-            db.execute("SELECT id FROM user WHERE username = ?", (username,)).fetchone()
-            is not None
-        ):
-            error = f"User {username} is already registered."
+            error = "inputEmpty."
+        elif users_db.isExistingUsername(username):
+            error = "usernameExists"
 
         if error is None:
-            # the name is available, store it in the database and go to
-            # the login page
-            db.execute(
-                "INSERT INTO user (username, password) VALUES (?, ?)",
-                (username, generate_password_hash(password)),
-            )
-            db.commit()
-            return redirect(url_for("auth.login"))
+            users_db.addUser(username, generate_password_hash(password))
+            error = "success"
+
+            # return redirect(url_for("auth.login"))
 
         flash(error)
 
     return render_template("auth/register.html")
 
 
-@bp.route("/login", methods=("GET", "POST"))
+@bp.route("/login", methods=["GET", "POST"])
 def login():
     """Log in a registered user by adding the user id to the session."""
-    if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        db = get_db()
-        error = None
-        user = db.execute(
-            "SELECT * FROM user WHERE username = ?", (username,)
-        ).fetchone()
 
-        if user is None:
-            error = "Incorrect username."
-        elif not check_password_hash(user["password"], password):
-            error = "Incorrect password."
+    if request.method == "POST":
+        username = request.form["inputUsername"]
+        password = request.form["inputPassword"]
+
+        error = None
+
+        user_ = username if users_db.isExistingUsername(username) else None
+        pass_ = None
+
+        if (not username) or (not password) or (user_ is None):
+            error = "invalidCredentials"
+        else:
+            pass_ = users_db.getPasswordHash(user_)
+            if not check_password_hash(pass_, password):
+                error = "invalidCredentials"
 
         if error is None:
-            # store the user id in a new session and return to the index
             session.clear()
-            session["user_id"] = user["id"]
-            return redirect(url_for("index"))
+            session["username"] = username # NOTE: maybe something alias id, for security?
+
+            return redirect(url_for("test_route")) # TODO: temp route, change to dash
 
         flash(error)
 
@@ -118,4 +121,4 @@ def login():
 def logout():
     """Clear the current session, including the stored user id."""
     session.clear()
-    return redirect(url_for("index"))
+    return redirect(url_for("auth.login"))
