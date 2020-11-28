@@ -56,10 +56,9 @@ def receive():
         client.write_points(json_body)
 
         measurement = json_body[0]['measurement']
-        field = list(json_body[0]['fields'].keys())[0]
 
         #Quering points from database
-        result = client.query('SELECT '+field+' FROM '+database+".autogen."+measurement)
+        result = client.query('SELECT * FROM '+database+".autogen."+measurement)
         print("Result: {0}".format(result))
         
 
