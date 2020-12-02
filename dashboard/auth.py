@@ -21,7 +21,7 @@ from werkzeug.security import generate_password_hash
 import dashboard.tools.accounts_handler as accounts_handler
 # import . tools.mq_handler as mq
 
-users_db = accounts_handler.accounts_handler(1)
+users_db = accounts_handler.accounts_handler()
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -47,13 +47,8 @@ def load_logged_in_user():
     if uname is None:
         g.user = None
     else:
-        pass
-        # g.user = uname # TODO: create alias, probably not safe
-        # redirect(url_for('test_route'))
-        # TODO: store the details of the user - not the password though. Why password?
-        # g.user = (
-        #     get_db().execute("SELECT * FROM user WHERE id = ?", (user_id,)).fetchone()
-        # )
+        g.user = uname
+        g.uuid = accounts_handler.getUUIDFromUsername(uname)
 
 
 @bp.route("/register", methods=["GET", "POST"])
@@ -110,15 +105,16 @@ def login():
             session.clear()
             session["username"] = username # NOTE: maybe something alias id, for security?
 
-            return redirect(url_for("test_route")) # TODO: temp route, change to dash
+            return redirect(url_for("dashboard.page_dashboard"))
 
         flash(error)
 
     return render_template("auth/login.html")
 
-
-@bp.route("/logout")
+@bp.route("/logout", methods=["GET"])
 def logout():
     """Clear the current session, including the stored user id."""
     session.clear()
+    g.user = None
+    g.uuid = None
     return redirect(url_for("auth.login"))

@@ -1,59 +1,110 @@
 import os
 import redis
+import uuid
 import hashlib
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-# TODO: Make operations, transactional
+# TODO: Make operations, transactional, if possible.
 
 class accounts_handler:
 
-    def __init__(self, db, redisHost=None):
-        self.db = db
+    def __init__(self, redisHost=None):
 
         if not redisHost:
             self.redisHost = os.getenv("REDIS_SERVICE_HOST") or "localhost"
         else:
             self.redisHost = redisHost
         
-        self.rdb = redis.Redis(host=redisHost, db=self.db)
+        self.username_passhash_db = redis.Redis(host=redisHost, db=1)
+        self.username_uuid_db = redis.Redis(host=redisHost, db=2)
+        self.uuid_username_db = redis.Redis(host=redisHost, db=3)
 
 
     def isExistingUsername(self, uname):
-        # try:
-        #     if self.rdb.get(uname):
-        #         return True
-        # except:
-        #     pass
-
-        if self.rdb.get(uname):
-            return True
+        try:
+            if self.username_passhash_db.get(uname):
+                return True
+        except:
+            pass
 
         return False
 
-    def getPasswordHash(self, uname):
-        # try:
-        #     ph = self.rdb.get(uname)
-        #     if ph:
-        #         return ph.decode()
-        # except:
-        #     pass
-        ph = self.rdb.get(uname)
-        if ph:
-            return ph.decode()
+    def isExistingUUID(self, uuid):
+        try:
+            if self.uuid_username_db.get(uuid):
+                return True
+        except:
+            pass
+
+        return False
+
+    def getPasswordHashFromUsername(self, uname):
+        try:
+            ph = self.username_passhash_db.get(uname)
+            if ph:
+                return ph.decode()
+        except:
+            pass
+
+        return ""
+
+    def getPasswordHashFromUUID(self, uuid):
+        try:
+            un = self.uuid_username_db.get(uuid)
+
+            if un:
+                ph = self.username_passhash_db.get(un.decode())
+
+            if ph:
+                return ph.decode()
+        except:
+            pass
+
+        return ""
+
+    def getUsernameFromUUID(self, uuid):
+        try:
+            un = self.uuid_username_db.get(uuid)
+            if un:
+                return un.decode()
+        except:
+            pass
+
+        return ""
+
+    def getUUIDFromUsername(self, uname):
+        try:
+            uid = self.username_uuid_db.get(uname)
+            if uid:
+                return uid.decode()
+        except:
+            pass
 
         return ""
 
     def addUser(self, uname, passHash):
-        # try:
-        #     if not self.isExistingUsername(uname):
-        #         self.rdb.set(uname, passHash)
-        #         return True
-        # except:
-        #     pass
-        if not self.isExistingUsername(uname):
-            self.rdb.set(uname, passHash)
-            return True
+        try:
+            if not self.isExistingUsername(uname):
+                self.username_passhash_db.set(uname, passHash)
+
+                # generate uuid
+                uid = ""
+                while True:
+                    uid = ''.join(uuid.uuid1().split('-'))
+
+                    try:
+                        if len(self.uuid_username_db.get(uid).decode()):
+                            continue
+                    except:
+                        break
+                
+                self.username_uuid_db.set(uname, uid)
+                self.uuid_username_db.set(uid, uname)
+
+                return True
+        except:
+            pass
 
         return False
 
