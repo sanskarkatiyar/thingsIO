@@ -91,7 +91,7 @@ class accounts_handler:
                 # generate uuid
                 uid = ""
                 while True:
-                    uid = ''.join(uuid.uuid1().split('-'))
+                    uid = uuid.uuid1().hex
 
                     try:
                         if len(self.uuid_username_db.get(uid).decode()):
@@ -107,4 +107,7 @@ class accounts_handler:
             pass
 
         return False
-
+    
+    # TODO: Complete!
+    def genereateNewUUID(self, uuid):
+        pass

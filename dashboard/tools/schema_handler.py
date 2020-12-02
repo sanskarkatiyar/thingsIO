@@ -35,7 +35,7 @@ class schema_handler:
 
     def schemaExists(self, uuid):
         try:
-            if self.uuid_username_db.get(uuid):
+            if self.uuid_schema_db.get(uuid):
                 return True
         except:
             pass
@@ -54,3 +54,7 @@ class schema_handler:
             return True # all keys have correct format and >= 1 value
 
         return False    # no keys
+
+    # TODO: Complete!
+    def isValidPoint(self, uuid, point):
+        pass

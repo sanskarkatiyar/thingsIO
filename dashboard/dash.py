@@ -14,7 +14,10 @@ from flask import url_for
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-bp = Blueprint("dashboard", __name__, url_prefix="/account")
+import dashboard.tools.accounts_handler as accounts_handler
+users_db = accounts_handler.accounts_handler()
+
+bp = Blueprint("dash", __name__, url_prefix="/account")
 
 @bp.before_app_request
 def load_logged_in_user():
@@ -22,18 +25,36 @@ def load_logged_in_user():
 
     if uname is None:
         g.user = None
+        g.uuid = None
     else:
         g.user = uname
+        g.uuid = users_db.getUUIDFromUsername(uname)
+
+def login_required(view):
+    """View decorator that redirects anonymous users to the login page."""
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if g.user is None:
+            return redirect(url_for("auth.login"))
+
+        return view(**kwargs)
+
+    return wrapped_view
 
 @bp.route("/dashboard", methods=["GET"])
+@login_required
 def page_dashboard():
-    return render_template("dashboard/dashboard.html", title="Dashboard", username=g.user)
+    return render_template("dash/dashboard.html", title="Dashboard", username=g.user)
 
 @bp.route("/schema", methods=["GET"])
+@login_required
 def page_schema():
-    pass
+    return render_template("dash/schema.html", title="Schema", api_key=g.uuid)
+
 
 @bp.route("/analytics", methods=["GET"])
+@login_required
 def page_analytics():
     pass
 

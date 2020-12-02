@@ -46,9 +46,10 @@ def load_logged_in_user():
 
     if uname is None:
         g.user = None
+        g.uuid = None
     else:
         g.user = uname
-        g.uuid = accounts_handler.getUUIDFromUsername(uname)
+        g.uuid = users_db.getUUIDFromUsername(uname)
 
 
 @bp.route("/register", methods=["GET", "POST"])
@@ -74,7 +75,7 @@ def register():
             users_db.addUser(username, generate_password_hash(password))
             error = "success"
 
-            # return redirect(url_for("auth.login"))
+            return redirect(url_for("auth.login"))
 
         flash(error)
 
@@ -97,7 +98,7 @@ def login():
         if (not username) or (not password) or (user_ is None):
             error = "invalidCredentials"
         else:
-            pass_ = users_db.getPasswordHash(user_)
+            pass_ = users_db.getPasswordHashFromUsername(user_)
             if not check_password_hash(pass_, password):
                 error = "invalidCredentials"
 
@@ -105,13 +106,14 @@ def login():
             session.clear()
             session["username"] = username # NOTE: maybe something alias id, for security?
 
-            return redirect(url_for("dashboard.page_dashboard"))
+            return redirect(url_for("dash.page_dashboard"))
 
         flash(error)
 
     return render_template("auth/login.html")
 
 @bp.route("/logout", methods=["GET"])
+@login_required
 def logout():
     """Clear the current session, including the stored user id."""
     session.clear()
