@@ -10,10 +10,38 @@ import os
 import sys
 import pika
 from influxdb import InfluxDBClient
+from influxdb import DataFrameClient
+import pandas as pd
+sys.path.append('../')
+import dashboard.tools.accounts_handler as accounts_handler
+import dashboard.tools.schema_handler as schema_handler
 
+users_db = accounts_handler.accounts_handler()
+schema_db = schema_handler.schema_handler()
 
 
 hostname = platform.node()
+
+def getDatafromUUID(API_KEY):
+    client = DataFrameClient(host='localhost', port=8086, username='root', password='root', database='database')
+    print("Influxdb Connected")
+    q = 'SELECT "field_1" FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
+    result = client.query(q) # returns dict list
+    df = result[API_KEY]
+    print(df)
+    # if(users_db.isExistingUUID(API_KEY)):
+    #     schema = schema_db.getSchemaFromUUID(API_KEY)
+    #     print(schema)
+        # if(schema_db.isValidSchema(schema)):
+        #     client = DataFrameClient(host='localhost', port=8086, username='root', password='root', database='database')
+        #     print("Influxdb Connected")
+        #     for key in schema.keys():
+        #         name = key['name']
+        #         datatype = key['type']
+        #         q = 'SELECT \"'+key+'\" FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
+        #         result = client.query(q)
+        #         df = result[API_KEY]
+        #         print(df)
 
 
 def receive():
@@ -40,31 +68,20 @@ def receive():
     def callback(ch, method, properties, body):
         decoded = jsonpickle.decode(body)
 
-        database = decoded['database']
-        json_body = decoded['json_body']
-        
         #Connecting to influx db server
-        client = InfluxDBClient(influxDBHost, 8086, 'root', 'root', database)
-
-        #Creating a database
-        client.create_database(database)
-
-        #Switching to the database
-        client.switch_database(database)
-
-        #Writing points to database from list of dict
-        client.write_points(json_body)
-
-        measurement = json_body[0]['measurement']
-
-        #Quering points from database
-        result = client.query('SELECT * FROM '+database+".autogen."+measurement)
-        print("Result: {0}".format(result))
+        client = InfluxDBClient(influxDBHost, 8086, 'root', 'root','database')
         
+        #Writing points to database from list of dict
+        client.write_points(decoded)
+
+        measurement = decoded[0]['measurement']
+        
+        getDatafromUUID(measurement) #Calling the function to test data pull from influx
 
     rabbitMQChannel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
     rabbitMQChannel.start_consuming()
     print("done")
+
 
 if __name__ == '__main__':
     try:
