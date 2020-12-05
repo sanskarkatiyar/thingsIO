@@ -69,6 +69,8 @@ def page_schema():
         if schema_dict is not None:
             if schema_db.setSchemaForUUID(g.uuid, schema_dict):
                 flag = 'schemaUpdateSuccess'
+                if schema_db.isValidSchema(schema_dict):
+                    flag = 'schemaUpdateFormatFail'
             else:
                 flag = 'schemaUpdateFail'
 
