@@ -108,7 +108,8 @@ def login():
 
             return redirect(url_for("dash.page_dashboard"))
 
-        flash(error)
+        else:
+            flash(error)
 
     return render_template("auth/login.html")
 

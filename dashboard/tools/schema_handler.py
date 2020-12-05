@@ -11,14 +11,14 @@ class schema_handler:
         else:
             self.redisHost = redisHost
         
-        self.uuid_schema_db = redis.Redis(host=redisHost, db=4)
+        self.uuid_schema_db = redis.Redis(host=redisHost, db=3)
 
 
     def getSchemaFromUUID(self, uuid):
         try:
             sc = self.uuid_schema_db.get(uuid)
             if sc:
-                return jsonpickle.decode(sc)
+                return jsonpickle.decode(sc.decode())
         except:
             pass
 
@@ -47,7 +47,7 @@ class schema_handler:
         # all keys should have a `field` start
         if len(schema.keys()) > 0:
             for k in schema:
-                if k.startswith() == 'field' and len(schema[k]) > 0:
+                if k.startswith() == 'field_' and len(schema[k]) > 0 and 'name' in schema[k] and 'type' in schema[k]:
                     continue
                 else:
                     return False # some field has an incorrect key
@@ -57,4 +57,12 @@ class schema_handler:
 
     # TODO: Complete!
     def isValidPoint(self, uuid, point):
-        pass
+        s = getSchemaFromUUID(uuid)
+        if len(s):   # check: schema exists
+            p_set = set(point.keys())
+            s_set = set(s.keys())
+
+            if len(p_set - s_set) > 0:
+                return False
+            return True
+        return False

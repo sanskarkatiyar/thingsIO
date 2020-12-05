@@ -16,9 +16,9 @@ class accounts_handler:
         else:
             self.redisHost = redisHost
         
-        self.username_passhash_db = redis.Redis(host=redisHost, db=1)
-        self.username_uuid_db = redis.Redis(host=redisHost, db=2)
-        self.uuid_username_db = redis.Redis(host=redisHost, db=3)
+        self.username_passhash_db = redis.Redis(host=redisHost, db=0)
+        self.username_uuid_db = redis.Redis(host=redisHost, db=1)
+        self.uuid_username_db = redis.Redis(host=redisHost, db=2)
 
 
     def isExistingUsername(self, uname):
@@ -107,7 +107,3 @@ class accounts_handler:
             pass
 
         return False
-    
-    # TODO: Complete!
-    def genereateNewUUID(self, uuid):
-        pass
