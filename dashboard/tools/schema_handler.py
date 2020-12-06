@@ -57,7 +57,7 @@ class schema_handler:
 
     # TODO: Complete!
     def isValidPoint(self, uuid, point):
-        s = getSchemaFromUUID(uuid)
+        s = self.getSchemaFromUUID(uuid)
         if len(s):   # check: schema exists
             p_set = set(point.keys())
             s_set = set(s.keys())

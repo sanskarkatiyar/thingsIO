@@ -17,9 +17,11 @@ from werkzeug.security import generate_password_hash
 
 import dashboard.tools.accounts_handler as accounts_handler
 import dashboard.tools.schema_handler as schema_handler
+import dashboard.tools.influx_handler as influx_handler
 
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
+influx_db = influx_handler.influx_handler()
 
 bp = Blueprint("dash", __name__, url_prefix="/account")
 
@@ -49,23 +51,23 @@ def login_required(view):
 @bp.route("/dashboard", methods=["GET"])
 @login_required
 def page_dashboard():
-    # TODO: #1 get data from the influx client and store in my_data
-    my_data = []
-    my_schema = json.dumps(schema_db.getSchemaFromUUID(g.uuid), indent=4)
+    my_schema = schema_db.getSchemaFromUUID(g.uuid)
+    my_schema_text = json.dumps(my_schema, indent=4)
+
+    my_df = influx_db.getDatafromUUID(g.uuid)
+    my_data = my_df.to_json(indent=4)
 
     return render_template(
         "dash/dashboard.html", 
         title="Dashboard", 
         username=g.user,
-        my_schema=my_schema,
+        my_schema=my_schema_text,
         my_data=my_data
     )
 
 @bp.route("/schema", methods=["GET", "POST"])
 @login_required
 def page_schema():
-    schema_update_success = False
-
     if request.method == "POST":
         schema_json_text = request.form['inputSchema']
         schema_dict = None
