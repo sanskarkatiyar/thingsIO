@@ -1,4 +1,3 @@
-
 import os
 import sys
 from influxdb import InfluxDBClient
@@ -20,4 +19,5 @@ class influx_handler:
         q = 'SELECT * FROM \"'+ API_KEY +'\" WHERE time > now() - 24h;'
         result = self.ReadClient.query(q)
         df = result[API_KEY]
+        print(result, file=sys.stderr)
         return df

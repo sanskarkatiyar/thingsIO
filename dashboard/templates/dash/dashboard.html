@@ -2,15 +2,92 @@
 
 {% block content %}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+<!-- data loading starts -->
+
 <div class="row">
     Welcome, {{ username }}!
 </div>
 
-<div class="row" id="myData">
-    <pre>{{ my_data }}</pre>
+{% for col in my_data %}
+{% if loop.index % 2 == 1 %}
+<div class="row">
+{% endif %}
+<div class="col-md">
+    <canvas id={{ col }}Canvas name={{ col }}Canvas height=200></canvas>
 </div>
+{% if loop.index % 2 == 0 %}
+</div>
+{% endif %}
+{% endfor %}
 
-<div class="row" id="mySchema">
-    <pre>{{ my_schema }}</pre>
-</div>
+<script>
+var my_schema = {{ my_schema | tojson }};
+</script>
+    
+<script>
+Chart.defaults.global.elements.line.fill = false;
+</script>
+
+<script>
+var my_data = {{ my_data | tojson }};
+var my_datasets = new Object();
+var my_plots = new Object();
+
+var a = new Array();
+
+{% for col in my_data %}
+    my_datasets["{{ col }}"] = new Array();
+    a = {{ my_data[col] | tojson }};
+    for (var i = 0; i < a.length; i++)
+    {
+        my_datasets["{{ col }}"].push({x: new Date(a[i][0]), y: a[i][1]});
+    }
+
+    my_plots["{{ col }}"] = {
+        label: my_schema["{{ col }}"]["name"],
+        data: my_datasets["{{ col }}"],
+        borderColor: "#3e95cd",
+        pointBorderColor: "red",
+        pointBackgroundColor: "red",
+        pointRadius: 4
+    };
+
+    var ctx{{ col }} = document.getElementById("{{ col }}Canvas").getContext('2d');
+    var {{ col }}Chart = new Chart(ctx{{ col }}, {
+        responsive: true,
+        type: 'line',
+        data: {
+            datasets: [my_plots["{{ col }}"]]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    ticks: {
+                    source: 'data',
+                    minRotation: 90,
+                    maxRotation: 90
+                    },
+                    time: {
+                        displayFormats: {
+                            minute: 'MMM DD YY HH:MM:SS'
+                        },
+                        unit: 'minute'
+                    }
+                }]
+            }
+        }
+    });
+
+    // delete d; delete a;
+
+{% endfor %}
+</script>
+<!-- data loading ends -->
+
+
+
 {% endblock %}

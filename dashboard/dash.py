@@ -3,6 +3,7 @@ import os
 import redis
 import json
 import sys
+import pandas as pd
 
 from flask import Blueprint
 from flask import flash
@@ -22,6 +23,22 @@ import dashboard.tools.influx_handler as influx_handler
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
 influx_db = influx_handler.influx_handler()
+
+def num_df_to_js(df, schema=None):
+    res_dict = dict()  # store all numeric fields data
+    df["ts"] = df.index
+    df["ts"] = df.ts.astype(str)
+
+    for k in df.keys():
+        if k != "ts" and schema is not None and schema[k]['type'] == 'numeric':
+            res_dict[k] = df[["ts", k]].to_dict(orient='split')['data']
+
+    return res_dict
+
+def loc_df_to_js(df, schema):
+    # TODO: location data 
+    raise NotImplementedError
+
 
 bp = Blueprint("dash", __name__, url_prefix="/account")
 
@@ -53,15 +70,16 @@ def login_required(view):
 def page_dashboard():
     my_schema = schema_db.getSchemaFromUUID(g.uuid)
     my_schema_text = json.dumps(my_schema, indent=4)
-
-    my_df = influx_db.getDatafromUUID(g.uuid)
-    my_data = my_df.to_json(indent=4)
+    my_data = []
+    if len(my_schema_text) > 0:
+        my_df = influx_db.getDatafromUUID(g.uuid)
+        my_data = num_df_to_js(my_df, my_schema)
 
     return render_template(
         "dash/dashboard.html", 
         title="Dashboard", 
         username=g.user,
-        my_schema=my_schema_text,
+        my_schema=my_schema,
         my_data=my_data
     )
 

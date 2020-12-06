@@ -1,0 +1,59 @@
+<!doctype html>
+<head>
+    <title>basic test</title>
+</head>
+
+<body>
+<!-- <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+<div width="400" height="400">
+    <canvas id="myChart" width="400" height="400"></canvas>
+</div>
+
+<script>
+Chart.defaults.global.elements.line.fill = false;
+var ctx = document.getElementById('myChart').getContext('2d');
+
+var datas = [{x: new Date('2020-12-06 00:12:28.375'), y: 123.4}, {x: new Date('2020-12-06 00:26:30.295'), y: 125.4}, {x: new Date('2020-12-06 00:27:30.460'), y: 200.4}, {x: new Date('2020-12-06 00:34:20.310'), y: 313.4}, {x: new Date('2020-12-06 00:36:56.169'), y: 102.4}, {x: new Date('2020-12-06 01:11:12.911'), y: 99.4}];
+
+var d1 = {
+    label: 'Temperature',
+    data: datas,
+    borderColor: "#3e95cd",
+    pointBorderColor: "red",
+    pointBackgroundColor: "red",
+    pointRadius: 4
+};
+
+
+var myLineChart = new Chart(ctx, {
+    responsive: true,
+    type: 'line',
+    data: {
+        datasets: [d1]
+    },
+    options: {
+        scales: {
+            xAxes: [{
+                type: 'time',
+                ticks: {
+                  source: 'data',
+                  minRotation: 90,
+                  maxRotation: 90
+                },
+                time: {
+                    displayFormats: {
+                        minute: 'MMM DD YY HH:MM:SS'
+                    },
+                    unit: 'minute'
+                }
+            }]
+        }
+    }
+});
+</script>
+</body>
+</html>
