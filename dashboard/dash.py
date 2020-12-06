@@ -30,14 +30,22 @@ def num_df_to_js(df, schema=None):
     df["ts"] = df.ts.astype(str)
 
     for k in df.keys():
-        if k != "ts" and schema is not None and schema[k]['type'] == 'numeric':
-            res_dict[k] = df[["ts", k]].to_dict(orient='split')['data']
+        if k != "ts" and schema is not None and k in schema and schema[k]['type'] == 'numeric':
+            res_dict[k] = df[["ts", k]].dropna().to_dict(orient='split')['data']
 
     return res_dict
 
-def loc_df_to_js(df, schema):
-    # TODO: location data 
-    raise NotImplementedError
+def loc_df_to_js(df, schema=None):
+    res_dict = dict()  # store all map fields data
+    df["ts"] = df.index
+    df["ts"] = df.ts.astype(str)
+
+    for k in df.keys():
+        if k != "ts" and schema is not None and k in schema and schema[k]['type'] == 'location':
+            temp = df[["ts", k]].dropna().to_dict(orient='split')['data']
+            res_dict[k] = [[i[0], float(i[1].split(',')[0]), float(i[1].split(',')[1])] for i in temp]
+    
+    return res_dict
 
 
 bp = Blueprint("dash", __name__, url_prefix="/account")
@@ -69,18 +77,21 @@ def login_required(view):
 @login_required
 def page_dashboard():
     my_schema = schema_db.getSchemaFromUUID(g.uuid)
-    my_schema_text = json.dumps(my_schema, indent=4)
     my_data = []
-    if len(my_schema_text) > 0:
+    my_map_data = {}
+
+    if len(my_schema) > 0:
         my_df = influx_db.getDatafromUUID(g.uuid)
         my_data = num_df_to_js(my_df, my_schema)
+        my_map_data = loc_df_to_js(my_df, my_schema)
 
     return render_template(
         "dash/dashboard.html", 
         title="Dashboard", 
         username=g.user,
         my_schema=my_schema,
-        my_data=my_data
+        my_data=my_data,
+        my_map_data=my_map_data
     )
 
 @bp.route("/schema", methods=["GET", "POST"])
