@@ -47,7 +47,7 @@ class schema_handler:
         # all keys should have a `field` start
         if len(schema.keys()) > 0:
             for k in schema:
-                if k.startswith() == 'field_' and len(schema[k]) > 0 and 'name' in schema[k] and 'type' in schema[k]:
+                if k.startswith('field_') and len(schema[k]) > 0 and 'name' in schema[k] and 'type' in schema[k]:
                     continue
                 else:
                     return False # some field has an incorrect key

@@ -1,5 +1,16 @@
 {% extends "dash/dashboard_base.html" %}
 
 {% block content %}
-Welcome, {{ username }}!
+
+<div class="row">
+    Welcome, {{ username }}!
+</div>
+
+<div class="row" id="myData">
+    <pre>{{ my_data }}</pre>
+</div>
+
+<div class="row" id="mySchema">
+    <pre>{{ my_schema }}</pre>
+</div>
 {% endblock %}

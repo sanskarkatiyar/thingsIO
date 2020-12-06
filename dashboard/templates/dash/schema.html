@@ -17,7 +17,7 @@
           <form method="POST">
               <div class="form-group">
                 <label for="inputSchema"><strong>Write down your schema (JSON):</strong></label>
-                <textarea class="form-control" id="inputSchema" name="inputSchema" rows="20" style="font-family: monospace; font-size: 10pt;">{{ user_schema }}</textarea>
+                <textarea class="form-control" id="inputSchema" name="inputSchema" rows="20" style="font-family: monospace; font-size: 10pt;">{{ my_schema }}</textarea>
               </div>
               {% if get_flashed_messages() and get_flashed_messages()[0] == 'schemaUpdateFail' or get_flashed_messages()[0] == 'schemaUpdateFormatFail' %}
               <div class="alert alert-danger" role="alert" id="schemaUpdateFailure">

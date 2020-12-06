@@ -49,7 +49,17 @@ def login_required(view):
 @bp.route("/dashboard", methods=["GET"])
 @login_required
 def page_dashboard():
-    return render_template("dash/dashboard.html", title="Dashboard", username=g.user)
+    # TODO: #1 get data from the influx client and store in my_data
+    my_data = []
+    my_schema = json.dumps(schema_db.getSchemaFromUUID(g.uuid), indent=4)
+
+    return render_template(
+        "dash/dashboard.html", 
+        title="Dashboard", 
+        username=g.user,
+        my_schema=my_schema,
+        my_data=my_data
+    )
 
 @bp.route("/schema", methods=["GET", "POST"])
 @login_required
@@ -66,13 +76,11 @@ def page_schema():
         except:
             flag = 'schemaUpdateFail'
 
-        if schema_dict is not None:
+        if schema_dict is not None and schema_db.isValidSchema(schema_dict):
             if schema_db.setSchemaForUUID(g.uuid, schema_dict):
                 flag = 'schemaUpdateSuccess'
-                if schema_db.isValidSchema(schema_dict):
-                    flag = 'schemaUpdateFormatFail'
-            else:
-                flag = 'schemaUpdateFail'
+        else:
+            flag = 'schemaUpdateFail'
 
         flash(flag)
 
@@ -81,7 +89,7 @@ def page_schema():
         "dash/schema.html", 
         title="Schema", 
         api_key=g.uuid, 
-        user_schema=schema_text
+        my_schema=schema_text
     )
 
 @bp.route("/analytics", methods=["GET"])
