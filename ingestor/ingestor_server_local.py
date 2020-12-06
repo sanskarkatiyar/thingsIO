@@ -19,38 +19,35 @@ import dashboard.tools.schema_handler as schema_handler
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
 
-
 hostname = platform.node()
 
+rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"
+influxDBHost = os.getenv("INFLUXDB_SERVICE_HOST") or "localhost"
+print("Connecting to rabbitmq({}) and influxdb({})".format(rabbitMQHost,influxDBHost))
+
+ReadClient = DataFrameClient(influxDBHost, 8086, 'root', 'root', 'thingsIODB')
+WriteClient = InfluxDBClient(influxDBHost, 8086, 'root', 'root','thingsIODB')
+
+
 def getDatafromUUID(API_KEY):
-    client = DataFrameClient(host='localhost', port=8086, username='root', password='root', database='database')
-    print("Influxdb Connected")
-    q = 'SELECT "field_1" FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
-    result = client.query(q) # returns dict list
-    df = result[API_KEY]
-    print(df)
-    # if(users_db.isExistingUUID(API_KEY)):
-    #     schema = schema_db.getSchemaFromUUID(API_KEY)
-    #     print(schema)
-        # if(schema_db.isValidSchema(schema)):
-        #     client = DataFrameClient(host='localhost', port=8086, username='root', password='root', database='database')
-        #     print("Influxdb Connected")
-        #     for key in schema.keys():
-        #         name = key['name']
-        #         datatype = key['type']
-        #         q = 'SELECT \"'+key+'\" FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
-        #         result = client.query(q)
-        #         df = result[API_KEY]
-        #         print(df)
+    if(users_db.isExistingUUID(API_KEY)):
+        schema = schema_db.getSchemaFromUUID(API_KEY)
+        if(schema_db.isValidSchema(schema)):
+            q = 'SELECT * FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
+            result = ReadClient.query(q)
+            df = result[API_KEY]
+            return df
+            # for key in schema.keys():
+            #     name = schema[key]['name']
+            #     datatype = schema[key]['type']
+            #     q = 'SELECT \"'+key+'\" FROM \"'+API_KEY+'\" WHERE time > now() - 24h;'
+            #     result = ReadClient.query(q)
+            #     df = result[API_KEY]
+            #     print(df)
 
 
 def receive():
-    rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"
-    influxDBHost = os.getenv("INFLUXDB_SERVICE_HOST") or "localhost"
     
-    print("Connecting to rabbitmq({}) and influxdb({})".format(rabbitMQHost,influxDBHost))
-
-
     rabbitMQ = pika.BlockingConnection(
             pika.ConnectionParameters(host=rabbitMQHost))
     rabbitMQChannel = rabbitMQ.channel()
@@ -67,16 +64,12 @@ def receive():
 
     def callback(ch, method, properties, body):
         decoded = jsonpickle.decode(body)
-
-        #Connecting to influx db server
-        client = InfluxDBClient(influxDBHost, 8086, 'root', 'root','database')
-        
+        WriteClient.create_database('thingsIODB')
+        WriteClient.switch_database('thingsIODB')
         #Writing points to database from list of dict
-        client.write_points(decoded)
-
+        WriteClient.write_points(decoded)
         measurement = decoded[0]['measurement']
-        
-        getDatafromUUID(measurement) #Calling the function to test data pull from influx
+        #getDatafromUUID(measurement) #Calling the function to test data pull from influx
 
     rabbitMQChannel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
     rabbitMQChannel.start_consuming()
