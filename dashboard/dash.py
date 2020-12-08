@@ -4,6 +4,12 @@ import redis
 import json
 import sys
 import pandas as pd
+import pika
+import time
+import pickle
+import hashlib
+import io
+import csv
 
 from flask import Blueprint
 from flask import flash
@@ -11,6 +17,7 @@ from flask import g
 from flask import redirect
 from flask import render_template
 from flask import request
+from flask import send_file
 from flask import session
 from flask import url_for
 from werkzeug.security import check_password_hash
@@ -19,10 +26,12 @@ from werkzeug.security import generate_password_hash
 import dashboard.tools.accounts_handler as accounts_handler
 import dashboard.tools.schema_handler as schema_handler
 import dashboard.tools.influx_handler as influx_handler
+import dashboard.tools.analytics_handler as analytics_handler
 
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
 influx_db = influx_handler.influx_handler()
+analytics_handler = analytics_handler.analytics_handler()
 
 def num_df_to_js(df, schema=None):
     res_dict = dict()  # store all numeric fields data
@@ -123,8 +132,71 @@ def page_schema():
         my_schema=schema_text
     )
 
-@bp.route("/analytics", methods=["GET"])
+@bp.route("/analytics", methods=["GET", "POST"])
 @login_required
 def page_analytics():
-    pass
+    my_schema = schema_db.getSchemaFromUUID(g.uuid)
 
+    return render_template(
+        "dash/analytics.html", 
+        title="Analytics", 
+        api_key=g.uuid,
+        my_schema=my_schema
+    )
+
+def generate_job_id(aux_data=""):
+    m = hashlib.new('ripemd160')
+    m.update(bytes(g.uuid + str(time.time()) + aux_data, encoding="utf-8"))
+    return m.hexdigest()
+
+@bp.route("/process/<event_id>", methods=["GET", "POST"])
+@login_required
+def analytics_request_processor(event_id):
+    df = influx_db.getDatafromUUID(g.uuid)
+
+    if event_id == 'export':
+        param_fields = request.form.getlist('exportFieldsSel')
+        param_filename = request.form['exportInputFilename']
+        param_filetype = request.form['exportInputFormat']
+
+        subdf = df[param_fields]
+
+        # source: https://stackoverflow.com/questions/35710361/python-flask-send-file-stringio-blank-files
+        if param_filetype == "CSV":
+            param_filename += ".csv"
+            proxy = io.StringIO()
+            subdf.to_csv(proxy, encoding="utf-8")
+            mem = io.BytesIO()
+            mem.write(proxy.getvalue().encode('utf-8'))
+            mem.seek(0)
+            proxy.close()
+
+            return send_file(mem, attachment_filename=param_filename, mimetype='text/csv', as_attachment=True)
+
+        elif param_filetype == "JSON":
+            param_filename += ".json"
+            proxy = io.StringIO()
+            proxy.write(subdf.to_json(indent=4))
+            mem = io.BytesIO()
+            mem.write(proxy.getvalue().encode('utf-8'))
+            mem.seek(0)
+            proxy.close()
+
+            return send_file(mem, attachment_filename=param_filename, mimetype='application/json', as_attachment=True)
+
+    elif event_id == 'stat1':
+        param_fields = request.form.getlist('fields_sel')
+        j_id = generate_job_id(event_id)
+        r = {
+                "data"  : df,
+                "params": { "fields": param_fields },
+                "op"    : event_id,
+                "job_id": j_id
+            }
+        
+        x = io.BytesIO()
+        rpkl = pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)
+        x.seek(0)
+
+        analytics_handler.send_msg_to_queue(data=x)
+        analytics_handler.store_jobid_to_redis(uuid=g.uuid, jobid=j_id)

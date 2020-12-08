@@ -1,0 +1,18 @@
+{
+    "field_1": {
+        "name": "temperature",
+        "type": "numeric"
+    },
+    "field_2": {
+        "name": "pressure",
+        "type": "numeric"
+    },
+    "field_3": {
+        "name": "gps1",
+        "type": "location"
+    },
+    "field_4": {
+        "name": "gps2",
+        "type": "location"
+    }
+}
