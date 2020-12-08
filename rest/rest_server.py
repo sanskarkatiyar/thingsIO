@@ -7,10 +7,7 @@ import platform
 import io, os, sys
 import pika
 import requests
-import base64, codecs
 import sys
-from influxdb import DataFrameClient
-import pandas as pd
 sys.path.append('../')
 import dashboard.tools.accounts_handler as accounts_handler
 import dashboard.tools.schema_handler as schema_handler

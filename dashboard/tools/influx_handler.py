@@ -16,7 +16,7 @@ class influx_handler:
 
 
     def getDatafromUUID(self, API_KEY):
-        q = 'SELECT * FROM \"'+ API_KEY +'\" WHERE time > now() - 24h;'
+        q = 'SELECT * FROM \"'+ API_KEY +'\" ;'
         result = self.ReadClient.query(q)
         df = result[API_KEY]
         print(result, file=sys.stderr)
