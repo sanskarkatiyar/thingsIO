@@ -185,14 +185,16 @@ def analytics_request_processor(event_id):
             return send_file(mem, attachment_filename=param_filename, mimetype='application/json', as_attachment=True)
 
     elif event_id == 'stat1':
-        param_fields = request.form.getlist('fields_sel')
+        param_fields = request.form.getlist('stat1FieldsSel')
+        param_window = request.form["stat1InputWindowSize"]
         j_id = generate_job_id(event_id)
+
         r = {
                 "data"  : df,
-                "params": { "fields": param_fields },
+                "params": { "fields": param_fields, "window": param_window },
                 "op"    : event_id,
                 "job_id": j_id
-            }
+        }
         
         x = io.BytesIO()
         rpkl = pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)

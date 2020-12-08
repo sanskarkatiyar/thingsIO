@@ -62,16 +62,9 @@
         <form method="POST" action="{{ url_for('dash.analytics_request_processor', event_id='moving_average') }}">
           <!-- MODIFY ID, NAME props for each form control -->
           <div class="form-row">
-            <div class="form-group col-md-6">
-              <label for="exportInputFilename">Filename</label>
-              <input type="text" class="form-control" id="exportInputFilename" name="exportInputFilename" value="thingsIO_export" required>
-            </div>
-            <div class="form-group col-md-6">
-              <label for="exportInputFormat">File format</label>
-              <select id="exportInputFormat" name="exportInputFormat" class="form-control">
-                <option selected>JSON</option>
-                <option>CSV</option>
-              </select>
+            <div class="form-group col-md-2">
+              <label for="stat1InputWindowSize">Window size</label>
+              <input type="number" class="form-control" id="stat1InputWindowSize" name="stat1InputWindowSize" value=1 min=0 required>
             </div>
           </div>
 
@@ -82,14 +75,16 @@
             </div>
 
             {% for k in my_schema %}
+            {% if my_schema[k]["type"] == "numeric" %}
             <div class="form-check form-check-inline">
-              <input class="form-check-input" type="checkbox" id="exportInlineCheckbox{{ loop.index }}" name="exportFieldsSel" value="{{ k }}">
-              <label class="form-check-label" for="exportInlineCheckbox{{ loop.index }}">{{ k }}: {{ my_schema[k]["name"] }}</label>
+              <input class="form-check-input" type="checkbox" id="stat1InlineCheckbox{{ loop.index }}" name="stat1FieldsSel" value="{{ k }}">
+              <label class="form-check-label" for="stat1InlineCheckbox{{ loop.index }}">{{ k }}: {{ my_schema[k]["name"] }}</label>
             </div>
+            {% endif %}
             {% endfor %}
           </div>
           {% if my_schema.keys() %}
-          <button type="submit" class="btn btn-primary">Submit job</button>
+          <button type="submit" class="btn btn-primary">Submit</button>
           {% endif %}
         </form>
       </div>
@@ -114,12 +109,11 @@
               </div>
             </div>
           </div>
-          
         </div>
+
+
       </div>
     </div>
-
-
 
   </div>
 
