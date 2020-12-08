@@ -9,8 +9,8 @@ import pika
 import requests
 import sys
 sys.path.append('../')
-import accounts_handler as accounts_handler
-import schema_handler as schema_handler
+import dashboard.tools.accounts_handler as accounts_handler
+import dashboard.tools.schema_handler as schema_handler
 
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
