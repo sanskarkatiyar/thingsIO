@@ -1,5 +1,6 @@
 import functools
 import os
+import base64
 import redis
 import json
 import sys
@@ -137,11 +138,21 @@ def page_schema():
 def page_analytics():
     my_schema = schema_db.getSchemaFromUUID(g.uuid)
 
+    past_job_ids = analytics_handler.get_jobids_from_uuid(g.uuid)
+
+    job_results = []
+    for j in past_job_ids:
+        r = analytics_handler.get_results_for_job(j)
+        if r is not None:
+            job_results = job_results + [base64.b64encode(x.getvalue()).decode() for x in r]
+
+
     return render_template(
         "dash/analytics.html", 
         title="Analytics", 
         api_key=g.uuid,
-        my_schema=my_schema
+        my_schema=my_schema,
+        job_results=job_results
     )
 
 def generate_job_id(aux_data=""):
@@ -184,7 +195,7 @@ def analytics_request_processor(event_id):
 
             return send_file(mem, attachment_filename=param_filename, mimetype='application/json', as_attachment=True)
 
-    elif event_id == 'stat1':
+    elif event_id == 'moving_average':
         param_fields = request.form.getlist('stat1FieldsSel')
         param_window = request.form["stat1InputWindowSize"]
         j_id = generate_job_id(event_id)
@@ -197,8 +208,10 @@ def analytics_request_processor(event_id):
         }
         
         x = io.BytesIO()
-        rpkl = pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)
+        pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)
         x.seek(0)
 
         analytics_handler.send_msg_to_queue(data=x)
         analytics_handler.store_jobid_to_redis(uuid=g.uuid, jobid=j_id)
+
+        return redirect(url_for('dash.page_analytics'))

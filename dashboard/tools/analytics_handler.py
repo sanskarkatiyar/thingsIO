@@ -16,8 +16,18 @@ class analytics_handler:
 
         rabbitMQChannel = rabbitMQ.channel()
         rabbitMQChannel.exchange_declare(exchange=exchange_name, exchange_type='direct')
-        rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=data)
+        rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=jsonpickle.encode(data))
         rabbitMQ.close()
 
     def store_jobid_to_redis(self, uuid, jobid):
         return self.uuid_jobid_db.sadd(uuid, jobid)
+
+    def get_results_for_job(self, jobid):
+        try:
+            result = self.jobid_result_db.get(jobid)
+            return jsonpickle.decode(result)
+        except:
+            return None
+
+    def get_jobids_from_uuid(self, uuid):
+        return list(self.uuid_jobid_db.smembers(uuid))

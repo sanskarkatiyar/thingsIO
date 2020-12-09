@@ -7,8 +7,8 @@ from time import sleep
 
 parser = argparse.ArgumentParser(description='Send simulated data to a thingsIO account')
 parser.add_argument('--endpoint', default='http://localhost:6000/store/')
-parser.add_argument('--apikey', default='3619296a391f11eba1e100155d87074f', type=str)
-parser.add_argument('--num', default=100, type=int, help='number of simulated requests')
+parser.add_argument('--apikey', default='8ea7f2d439ae11eb9e4688e9fe69deef', type=str)
+parser.add_argument('--num', default=50, type=int, help='number of simulated requests')
 parser.add_argument('--schema_file', default="schema.json", help='path to the schema json')
 
 args = parser.parse_args()
@@ -41,4 +41,4 @@ for i in tqdm.trange(NUM_REQ):
         req[k] = getRandom(SCHEMA[k]["type"])
 
     r = requests.post(URL, data=jsonpickle.encode(req), headers=headers)
-    sleep(0.5)
+    sleep(0.7)

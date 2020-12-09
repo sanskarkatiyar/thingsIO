@@ -8,6 +8,7 @@ import json
 import io
 import os
 import sys
+sys.path.append('../')
 import pika
 import numpy as np
 import pandas as pd
@@ -39,7 +40,7 @@ def mean_absolute_percentage_error(y_true, y_pred):
 
 hostname = platform.node()
 
-def plot_moving_average(series, field,window=10, plot_intervals=False, scale=1.96, filename='moving_average.png'):
+def plot_moving_average(series, field, window=10, plot_intervals=False, scale=1.96, filename='moving_average.png'):
 
     rolling_mean = series.rolling(window=window).mean()
     
@@ -193,7 +194,8 @@ def receive():
     print(' [*] Waiting for messages. To exit press CTRL+C')
 
     def callback(ch, method, properties, body):
-        unpickled = pickle.load(body)
+
+        unpickled = pickle.load(jsonpickle.decode(body))
         jobid = unpickled['job_id']
         df = unpickled['data']
         operation = unpickled['op']
@@ -203,15 +205,15 @@ def receive():
         result = []
         for i in range(len(fieldset)):
             if(operation == 'moving_average'):
-                result.append(plot_moving_average(df.iloc[:, i], fieldset[i], params['window'], plot_intervals=False))
+                result.append(plot_moving_average(df.iloc[:, i], fieldset[i], window=int(params['window'])))
             if(operation == 'exponential_smoothing'):
-                result.append(plot_exponential_smoothing(df.iloc[:, i], [params['alpha1'], params['alpha2']], fieldset[i]))
+                result.append(plot_exponential_smoothing(df.iloc[:, i], fieldset[i], alphas =[params['alpha1'], params['alpha2']]))
             if(operation == 'double_exponential_smoothing'):
                 result.append(plot_double_exponential_smoothing(df.iloc[:, i], fieldset[i] ,alphas=[params['alpha1'], params['alpha2']], betas=[params['beta1'], params['beta2']]))
             if(operation == 'ts_plot'):
-                result.append(tsplot(df.iloc[:, i], fieldset[i], params['lags']))
-        
-        analytics_db.jobid_result_db.set(jobid,result)      
+                result.append(tsplot(df.iloc[:, i], fieldset[i], lags=params['lags']))
+        # print(result)
+        analytics_db.jobid_result_db.set(jobid,jsonpickle.encode(result))   
             # if(operation == 'sarima_stats'):
             #     ps = range(0, 4)
             #     d = 1
