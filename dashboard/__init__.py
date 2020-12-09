@@ -37,7 +37,7 @@ def create_app(test_config=None):
     # db.init_app(app)
 
     # apply the blueprints to the app
-    from dashboard import auth, dash
+    from . import auth, dash
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(dash.bp)

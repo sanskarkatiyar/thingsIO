@@ -4,7 +4,7 @@ RUN apt-get update
 RUN pip3 install --upgrade flask jsonpickle pika redis influxdb requests numpy pandas matplotlib
 
 RUN mkdir -p /app/
-COPY ./dash.tar.gz /app/
+COPY dash.tar.gz /app/
 WORKDIR /app/
 RUN tar -zxvf dash.tar.gz
 

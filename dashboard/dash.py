@@ -26,10 +26,10 @@ from flask import url_for
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
-import dashboard.tools.accounts_handler as accounts_handler
-import dashboard.tools.schema_handler as schema_handler
-import dashboard.tools.influx_handler as influx_handler
-import dashboard.tools.analytics_handler as analytics_handler
+import tools.accounts_handler as accounts_handler
+import tools.schema_handler as schema_handler
+import tools.influx_handler as influx_handler
+import tools.analytics_handler as analytics_handler
 
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
