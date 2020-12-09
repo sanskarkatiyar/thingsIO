@@ -28,7 +28,7 @@ def getRandom(s):
     if s == "numeric":
         return random.uniform(0,100)
     elif s == "location":
-        return "{},{}".format(random.uniform(30,60), random.uniform(40,70))
+        return "{},{}".format(random.uniform(20,80), random.uniform(0,100))
     else:
         return ""
 
