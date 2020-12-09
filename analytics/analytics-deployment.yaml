@@ -4,23 +4,21 @@ apiVersion: apps/v1
 #
 kind: Deployment
 metadata:
-  name: ingestor-deployment
+  name: analytics-deployment
 spec:
-  replicas: 1
+  replicas: 2
   # The .spec.selector field defines how the Deployment finds which Pods to manage.
   # In this case, you simply select a label that is defined in the Pod template (app: blog).
   # However, more sophisticated selection rules are possible,
   # as long as the Pod template itself satisfies the rule.
   selector:
     matchLabels:
-      app: ingestor
+      app: analytics
   template:
     metadata:
       labels:
-        app: ingestor
+        app: analytics
     spec:
       containers:
-      - name: ingestor
-        image: "gcr.io/csci5253-288221/thingsio/ingestor:1.0"
-
-
+      - name: analytics
+        image: "gcr.io/csci5253-288221/thingsio/analytics:1.0"
