@@ -6,12 +6,12 @@ class schema_handler:
 
     def __init__(self, redisHost=None):
 
-        if not redisHost:
+        if redisHost is None:
             self.redisHost = os.getenv("REDIS_SERVICE_HOST") or "localhost"
         else:
             self.redisHost = redisHost
         
-        self.uuid_schema_db = redis.Redis(host=redisHost, db=3)
+        self.uuid_schema_db = redis.Redis(host=self.redisHost, db=3)
 
 
     def getSchemaFromUUID(self, uuid):

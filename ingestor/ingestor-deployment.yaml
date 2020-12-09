@@ -21,6 +21,6 @@ spec:
     spec:
       containers:
       - name: ingestor
-        image: "gcr.io/csci5253-288221/thingsio/ingestor:1.0"
+        image: "docker.io/sanskarkatiyar/thingsio-ingestor:latest"
 
 

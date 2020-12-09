@@ -6,7 +6,7 @@ import jsonpickle
 class analytics_handler:
     def __init__(self, MQ_HOST="localhost", redisHost="localhost"):
         self.mq_host = os.getenv("RABBITMQ_SERVICE_HOST") or MQ_HOST
-        self.redisHost = os.getenv("REDIS_SERVICE_HOST") or "localhost"
+        self.redisHost = os.getenv("REDIS_SERVICE_HOST") or redisHost
 
         self.uuid_jobid_db = redis.Redis(host=self.redisHost, db=4)
         self.jobid_result_db = redis.Redis(host=self.redisHost, db=5)

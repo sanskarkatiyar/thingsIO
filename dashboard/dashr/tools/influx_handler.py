@@ -7,7 +7,7 @@ class influx_handler:
 
     def __init__(self, influxDBHost=None):
 
-        if not influxDBHost:
+        if influxDBHost is None:
             self.influxDBHost = os.getenv("INFLUXDB_SERVICE_HOST") or "localhost"
         else:
             self.influxDBHost = influxDBHost
