@@ -11,12 +11,11 @@ spec:
   rules:
   - http:
       paths:
-      - path: /store/*
-        backend:
-          serviceName: rest-svc
-          servicePort: 6000
       - path: /*
         backend:
           serviceName: dashboard-svc
           servicePort: 5000
- 
+      - path: /store/*
+        backend:
+          serviceName: rest-svc
+          servicePort: 6000

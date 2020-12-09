@@ -9,8 +9,8 @@ WORKDIR /app/
 RUN tar -zxvf dash.tar.gz
 
 ENV FLASK_APP=/app/dashboard/__init__.py
-ENV FLASK_ENV=development
+ENV FLASK_ENV=production
 
 EXPOSE 5000
 
-CMD flask run
+CMD flask run --host=0.0.0.0
