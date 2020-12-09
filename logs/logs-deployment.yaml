@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+#
+# Create a deployment ( https://kubernetes.io/docs/concepts/workloads/controllers/deployment/ )
+#
+kind: Deployment
+metadata:
+  name: logs-deployment
+spec:
+  replicas: 1
+  # The .spec.selector field defines how the Deployment finds which Pods to manage.
+  # In this case, you simply select a label that is defined in the Pod template (app: blog).
+  # However, more sophisticated selection rules are possible,
+  # as long as the Pod template itself satisfies the rule.
+  selector:
+    matchLabels:
+      app: logs
+  template:
+    metadata:
+      labels:
+        app: logs
+    spec:
+      containers:
+      - name: logs
+        image: "docker.io/sanskarkatiyar/thingsio-logger:latest"

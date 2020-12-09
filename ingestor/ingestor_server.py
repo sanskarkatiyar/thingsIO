@@ -9,6 +9,7 @@ import io
 import os
 import sys
 import pika
+import datetime
 from influxdb import InfluxDBClient
 from influxdb import DataFrameClient
 
@@ -23,7 +24,7 @@ WriteClient.create_database('thingsIODB')
 WriteClient.switch_database('thingsIODB')
 
 def receive():
-    
+
     rabbitMQ = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitMQHost))
     rabbitMQChannel = rabbitMQ.channel()
 
@@ -38,7 +39,10 @@ def receive():
 
     def callback(ch, method, properties, body):
         print("INGESTOR.{}.CALLBACK".format(hostname))
+
         decoded = jsonpickle.decode(body)
+        sendLogs('{} - INGESTOR - {} - Received data{} for ingesting from RabbitMQ Host-{} to InfluxDB Host -{}'.format(datetime.datetime.now(), hostname, decoded, rabbitMQHost, influxDBHost))
+
         # WriteClient.create_database('thingsIODB')
         # WriteClient.switch_database('thingsIODB')
         #Writing points to database from list of dict
@@ -49,6 +53,18 @@ def receive():
     rabbitMQChannel.start_consuming()
     # print("done")
 
+def sendLogs(logdata):
+    rabbitMQ = pika.BlockingConnection(
+            pika.ConnectionParameters(host=rabbitMQHost))
+    rabbitMQChannel = rabbitMQ.channel()
+
+    rabbitMQChannel.exchange_declare(exchange='logs',
+                            exchange_type='direct')
+    rabbitMQChannel.basic_publish(exchange='logs',
+                        routing_key='logdata',
+                        body=logdata)
+    
+    rabbitMQ.close()
 
 if __name__ == '__main__':
     try:

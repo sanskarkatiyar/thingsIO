@@ -14,6 +14,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from PIL import Image 
+import datetime
 sns.set()
 
 from sklearn.metrics import r2_score, median_absolute_error, mean_absolute_error
@@ -193,6 +194,8 @@ def receive():
     def callback(ch, method, properties, body):
 
         unpickled = pickle.load(jsonpickle.decode(body))
+        sendLogs('{} - ANALYTICS {}- Received job for analytics {} at RabbitMQ Host-{}'.format(datetime.datetime.now(), hostname, unpickled, rabbitMQHost))
+
         jobid = unpickled['job_id']
         df = unpickled['data']
         operation = unpickled['op']
@@ -237,6 +240,19 @@ def receive():
     rabbitMQChannel.start_consuming()
     print("done")
 
+
+def sendLogs(logdata):
+    rabbitMQ = pika.BlockingConnection(
+            pika.ConnectionParameters(host=rabbitMQHost))
+    rabbitMQChannel = rabbitMQ.channel()
+
+    rabbitMQChannel.exchange_declare(exchange='logs',
+                            exchange_type='direct')
+    rabbitMQChannel.basic_publish(exchange='logs',
+                        routing_key='logdata',
+                        body=logdata)
+    
+    rabbitMQ.close()
 
 if __name__ == '__main__':
     try:

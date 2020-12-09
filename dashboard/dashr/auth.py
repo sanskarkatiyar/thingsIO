@@ -3,9 +3,10 @@
 
 import functools
 import os
+import pika
 import redis
 import sys
-
+import datetime
 from flask import Blueprint
 from flask import flash
 from flask import g
@@ -20,7 +21,7 @@ from werkzeug.security import generate_password_hash
 # TODO: add database, message queue access
 from dashr.tools import accounts_handler
 # import . tools.mq_handler as mq
-
+rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"
 users_db = accounts_handler.accounts_handler()
 
 bp = Blueprint("auth", __name__, url_prefix="/auth")
@@ -85,11 +86,12 @@ def register():
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     """Log in a registered user by adding the user id to the session."""
+    
 
     if request.method == "POST":
         username = request.form["inputUsername"]
         password = request.form["inputPassword"]
-
+        sendLogs('{} - AUTH - {} - Login RabbitMQ Host-{} '.format(datetime.datetime.now(),username, rabbitMQHost))
         error = None
 
         user_ = username if users_db.isExistingUsername(username) else None
@@ -121,3 +123,16 @@ def logout():
     g.user = None
     g.uuid = None
     return redirect(url_for("auth.login"))
+
+def sendLogs(logdata):
+    rabbitMQ = pika.BlockingConnection(
+            pika.ConnectionParameters(host=rabbitMQHost))
+    rabbitMQChannel = rabbitMQ.channel()
+
+    rabbitMQChannel.exchange_declare(exchange='logs',
+                            exchange_type='direct')
+    rabbitMQChannel.basic_publish(exchange='logs',
+                        routing_key='logdata',
+                        body=logdata)
+    
+    rabbitMQ.close()
