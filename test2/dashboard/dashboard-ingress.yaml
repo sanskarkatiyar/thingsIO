@@ -4,17 +4,13 @@
 apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
-  name: rest-ingress
+  name: dashboard-ingress
   annotations:
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:
   - http:
       paths:
-      - path: /store/*
-        backend:
-          serviceName: rest-svc
-          servicePort: 6000
       - path: /*
         backend:
           serviceName: dashboard-svc

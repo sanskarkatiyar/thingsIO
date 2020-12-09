@@ -1,0 +1,170 @@
+{% extends "dash/dashboard_base.html" %}
+
+{% block extra_headers %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+crossorigin=""/>
+
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+crossorigin=""></script>
+{% endblock %}
+
+{% block content %}
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+<!-- data loading starts -->
+
+<div class="row">
+    Welcome, {{ username }}!
+
+    <!-- <pre>
+        {{ aux_data }}
+    </pre> -->
+</div>
+
+{% for col in my_data %}
+{% if loop.index % 2 == 1 %}
+<div class="row">
+{% endif %}
+<div class="col-md-6">
+    <h3>{{ col }}: {{ my_schema[col]["name"] }}</h3>
+    <canvas id="{{ col }}Canvas" name="{{ col }}Canvas" style="height:350px;"></canvas>
+</div>
+{% if loop.index % 2 == 0 %}
+</div>
+<br />
+{% endif %}
+{% endfor %}
+
+<!-- TODO: push the map to empty spot if available -->
+{% for col in my_map_data %}
+{% if loop.index % 2 == 1 %}
+<div class="row">
+{% endif %}
+<div class="col-md-6">
+    <h3>{{ col }}: {{ my_schema[col]["name"] }}</h3>
+    <div id="{{ col }}MapChart" style="height:300px; position:relative; width:100% "></div>
+</div>
+{% if loop.index % 2 == 0 %}
+</div>
+<br />
+{% endif %}
+{% endfor %}
+
+<script>
+var my_schema = {{ my_schema | tojson }};
+</script>
+    
+<script>
+Chart.defaults.global.elements.line.fill = false;
+</script>
+
+<!-- START numeric data processing and plots -->
+<script>
+var my_data = {{ my_data | tojson }};
+var my_datasets = new Object();
+var my_plots = new Object();
+
+var a = new Array();
+
+{% for col in my_data %}
+    my_datasets["{{ col }}"] = new Array();
+    a = {{ my_data[col] | tojson }};
+    for (var i = 0; i < a.length; i++)
+    {
+        my_datasets["{{ col }}"].push({x: new Date(a[i][0]), y: a[i][1]});
+    }
+
+    my_plots["{{ col }}"] = {
+        label: my_schema["{{ col }}"]["name"],
+        data: my_datasets["{{ col }}"],
+        borderColor: "#3e95cd",
+        pointBorderColor: "red",
+        pointBackgroundColor: "red",
+        pointRadius: 4
+    };
+
+    var ctx{{ col }} = document.getElementById("{{ col }}Canvas").getContext('2d');
+    var {{ col }}Chart = new Chart(ctx{{ col }}, {
+        responsive: true,
+        type: 'line',
+        data: {
+            datasets: [my_plots["{{ col }}"]]
+        },
+        options: {
+            scales: {
+                xAxes: [{
+                    type: 'time',
+                    ticks: {
+                    source: 'data',
+                    minRotation: 90,
+                    maxRotation: 90
+                    },
+                    time: {
+                        displayFormats: {
+                            minute: 'MMM DD YY HH:MM:SS'
+                        },
+                        unit: 'minute'
+                    }
+                }]
+            }
+        }
+    });
+
+    // delete d; delete a;
+
+{% endfor %}
+</script>
+<!-- END numeric data processing and plots -->
+
+
+<!-- START map data processing-->
+<script>
+    // incoming my_map_data is an object with field names as keys
+    //  each value will be an array of arrays ["timstamp", "lat,lon" ]
+    var my_map_data = {{ my_map_data | tojson }};
+
+    {% for col in my_map_data %}
+
+        var initLatLon{{ col }} = new Object;
+        if (my_map_data["{{ col }}"].length > 0)
+        {
+            initLatLon{{ col }} = {
+                        lon: {{ my_map_data[col][-1][2] }}, 
+                        lat: {{ my_map_data[col][-1][1] }}
+            };
+        }
+        else
+        {
+            initLatLon{{ col }} = {lon: 0, lat: 0};
+        }
+
+        var {{ col }}MapObj = L.map('{{ col }}MapChart').setView(initLatLon{{ col }}, 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+        }).addTo({{ col }}MapObj);
+
+        for(var i = 0; i < my_map_data["{{ col }}"].length; i++)
+        {
+            L.marker({lon: my_map_data["{{ col }}"][i][2], lat: my_map_data["{{ col }}"][i][1]}).bindPopup(my_map_data["{{ col }}"][i][0]).addTo({{ col }}MapObj);
+        }
+        // FLASK Equivalent below:
+        // {% for i in my_map_data[col] %}
+        //     L.marker({lon: {{ i[2] }}, lat: {{ i[1] }}}).bindPopup("{{ i[0] }}").addTo({{ col }}MapObj);
+        // {% endfor %}
+
+    {% endfor %}
+
+
+</script>
+<!-- END map data processing-->
+
+<!-- data loading ends -->
+
+
+
+{% endblock %}
