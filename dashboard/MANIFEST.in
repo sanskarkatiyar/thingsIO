@@ -1,0 +1,4 @@
+graft dashr/static
+graft dashr/templates
+graft dashr/tools
+global-exclude *.pyc

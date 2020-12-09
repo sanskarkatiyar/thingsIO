@@ -21,6 +21,6 @@ spec:
     spec:
       containers:
       - name: dashboard
-        image: "docker.io/sanskarkatiyar/thingsio-dashboard:2.0"
+        image: "docker.io/sanskarkatiyar/thingsio-dashboard:latest"
         ports:
         - containerPort: 5000

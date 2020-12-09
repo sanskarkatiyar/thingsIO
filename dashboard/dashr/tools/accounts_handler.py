@@ -11,14 +11,14 @@ class accounts_handler:
 
     def __init__(self, redisHost=None):
 
-        if not redisHost:
+        if redisHost is None:
             self.redisHost = os.getenv("REDIS_SERVICE_HOST") or "localhost"
         else:
             self.redisHost = redisHost
         
-        self.username_passhash_db = redis.Redis(host=redisHost, db=0)
-        self.username_uuid_db = redis.Redis(host=redisHost, db=1)
-        self.uuid_username_db = redis.Redis(host=redisHost, db=2)
+        self.username_passhash_db = redis.Redis(host=self.redisHost, db=0)
+        self.username_uuid_db = redis.Redis(host=self.redisHost, db=1)
+        self.uuid_username_db = redis.Redis(host=self.redisHost, db=2)
 
 
     def isExistingUsername(self, uname):

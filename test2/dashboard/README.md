@@ -1,3 +1,0 @@
-# dashboard
-
-References: flask tutorial

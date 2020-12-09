@@ -18,7 +18,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
 
 # TODO: add database, message queue access
-import dashboard.tools.accounts_handler as accounts_handler
+from dashr.tools import accounts_handler
 # import . tools.mq_handler as mq
 
 users_db = accounts_handler.accounts_handler()
