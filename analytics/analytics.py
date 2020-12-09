@@ -8,7 +8,6 @@ import json
 import io
 import os
 import sys
-sys.path.append('../')
 import pika
 import numpy as np
 import pandas as pd
@@ -21,19 +20,17 @@ from sklearn.metrics import r2_score, median_absolute_error, mean_absolute_error
 from sklearn.metrics import median_absolute_error, mean_squared_error, mean_squared_log_error
 
 from scipy.optimize import minimize
-import statsmodels.tsa.api as smt
-import statsmodels.api as sm
+# import statsmodels.tsa.api as smt
+# import statsmodels.api as sm
 
-from tqdm import tqdm_notebook
+# from tqdm import tqdm_notebook
 import warnings
 warnings.filterwarnings('ignore')
 from itertools import product
-import dashboard.tools.analytics_handler as analytics_handler
-
+from analytics_handler import analytics_handler
 
 rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"
-analytics_db = analytics_handler.analytics_handler()
-
+analytics_db = analytics_handler()
 
 def mean_absolute_percentage_error(y_true, y_pred):
     return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
@@ -118,64 +115,64 @@ def plot_double_exponential_smoothing(series, field, alphas=[0.9,0.02], betas=[0
         img_bytes = io.BytesIO(image)
     return img_bytes
 
-def tsplot(y, field, lags=30, figsize=(12, 7), syle='bmh', filename='ts_plot.png'):
+# def tsplot(y, field, lags=30, figsize=(12, 7), syle='bmh', filename='ts_plot.png'):
     
-    if not isinstance(y, pd.Series):
-        y = pd.Series(y)
+#     if not isinstance(y, pd.Series):
+#         y = pd.Series(y)
         
-    with plt.style.context(style='bmh'):
-        fig = plt.figure(figsize=figsize)
-        layout = (2,2)
-        ts_ax = plt.subplot2grid(layout, (0,0), colspan=2)
-        acf_ax = plt.subplot2grid(layout, (1,0))
-        pacf_ax = plt.subplot2grid(layout, (1,1))
+#     with plt.style.context(style='bmh'):
+#         fig = plt.figure(figsize=figsize)
+#         layout = (2,2)
+#         ts_ax = plt.subplot2grid(layout, (0,0), colspan=2)
+#         acf_ax = plt.subplot2grid(layout, (1,0))
+#         pacf_ax = plt.subplot2grid(layout, (1,1))
         
-        y.plot(ax=ts_ax)
-        p_value = sm.tsa.stattools.adfuller(y)[1]
-        ts_ax.set_title('Time Series Analysis Plots - {}\n Dickey-Fuller: p={0:.5f}'.format(field, p_value))
-        smt.graphics.plot_acf(y, lags=lags, ax=acf_ax)
-        smt.graphics.plot_pacf(y, lags=lags, ax=pacf_ax)
-        plt.tight_layout()
-        plt.savefig(filename)
-        with Image.open(filename) as image:
-            img_bytes = io.BytesIO(image)
-        return img_bytes
+#         y.plot(ax=ts_ax)
+#         p_value = sm.tsa.stattools.adfuller(y)[1]
+#         ts_ax.set_title('Time Series Analysis Plots - {}\n Dickey-Fuller: p={0:.5f}'.format(field, p_value))
+#         smt.graphics.plot_acf(y, lags=lags, ax=acf_ax)
+#         smt.graphics.plot_pacf(y, lags=lags, ax=pacf_ax)
+#         plt.tight_layout()
+#         plt.savefig(filename)
+#         with Image.open(filename) as image:
+#             img_bytes = io.BytesIO(image)
+#         return img_bytes
         
         
-def optimize_SARIMA(y, parameters_list, d, D, s):
-    """
-        Return dataframe with parameters and corresponding AIC
+# def optimize_SARIMA(y, parameters_list, d, D, s):
+#     """
+#         Return dataframe with parameters and corresponding AIC
         
-        parameters_list - list with (p, q, P, Q) tuples
-        d - integration order
-        D - seasonal integration order
-        s - length of season
-    """
+#         parameters_list - list with (p, q, P, Q) tuples
+#         d - integration order
+#         D - seasonal integration order
+#         s - length of season
+#     """
     
-    results = []
-    best_aic = float('inf')
+#     results = []
+#     best_aic = float('inf')
     
-    for param in tqdm_notebook(parameters_list):
-        try: model = sm.tsa.statespace.SARIMAX(y, order=(param[0], d, param[1]),
-                                               seasonal_order=(param[2], D, param[3], s)).fit(disp=-1)
-        except:
-            continue
+#     for param in tqdm_notebook(parameters_list):
+#         try: model = sm.tsa.statespace.SARIMAX(y, order=(param[0], d, param[1]),
+#                                                seasonal_order=(param[2], D, param[3], s)).fit(disp=-1)
+#         except:
+#             continue
             
-        aic = model.aic
+#         aic = model.aic
         
-        #Save best model, AIC and parameters
-        if aic < best_aic:
-            best_model = model
-            best_aic = aic
-            best_param = param
-        results.append([param, model.aic])
+#         #Save best model, AIC and parameters
+#         if aic < best_aic:
+#             best_model = model
+#             best_aic = aic
+#             best_param = param
+#         results.append([param, model.aic])
         
-    result_table = pd.DataFrame(results)
-    result_table.columns = ['parameters', 'aic']
-    #Sort in ascending order, lower AIC is better
-    result_table = result_table.sort_values(by='aic', ascending=True).reset_index(drop=True)
+#     result_table = pd.DataFrame(results)
+#     result_table.columns = ['parameters', 'aic']
+#     #Sort in ascending order, lower AIC is better
+#     result_table = result_table.sort_values(by='aic', ascending=True).reset_index(drop=True)
     
-    return result_table
+#     return result_table
 
 
 def receive():

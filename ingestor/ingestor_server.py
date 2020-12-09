@@ -12,7 +12,6 @@ import pika
 from influxdb import InfluxDBClient
 from influxdb import DataFrameClient
 
-
 hostname = platform.node()
 
 rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"

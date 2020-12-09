@@ -1,7 +1,15 @@
-FROM python:3
+FROM python:3.9.1-slim
 
-WORKDIR /usr/src/app
-RUN pip3 install jsonpickle pika influxdb requests numpy
+RUN apt-get update
 
-COPY ingestor_server.py /usr/src/app
-CMD ["python3", "ingestor_server.py"]
+RUN pip3 install --upgrade jsonpickle pika influxdb requests numpy
+
+RUN mkdir -p /ingestor
+COPY *.py ingestor/
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+ENTRYPOINT ["/tini", "--"]
+
+CMD python3 ingestor/ingestor_server.py
