@@ -17,12 +17,14 @@ crossorigin=""></script>
 
 <!-- data loading starts -->
 
-<div class="row">
-    Welcome, {{ username }}!
+<div class="container-fluid">
+    <div class="row">
+        Welcome, {{ username }}!
 
-    <!-- <pre>
-        {{ aux_data }}
-    </pre> -->
+        <!-- <pre>
+            {{ aux_data }}
+        </pre> -->
+    </div>
 </div>
 
 {% for col in my_data %}
@@ -31,7 +33,7 @@ crossorigin=""></script>
 {% endif %}
 <div class="col-md-6">
     <h3>{{ col }}: {{ my_schema[col]["name"] }}</h3>
-    <canvas id="{{ col }}Canvas" name="{{ col }}Canvas" style="height:350px;"></canvas>
+    <canvas id="{{ col }}Canvas" name="{{ col }}Canvas" style="height:400px;"></canvas>
 </div>
 {% if loop.index % 2 == 0 %}
 </div>
@@ -46,7 +48,7 @@ crossorigin=""></script>
 {% endif %}
 <div class="col-md-6">
     <h3>{{ col }}: {{ my_schema[col]["name"] }}</h3>
-    <div id="{{ col }}MapChart" style="height:300px; position:relative; width:100% "></div>
+    <div id="{{ col }}MapChart" style="height:400px; position:relative; width:100% "></div>
 </div>
 {% if loop.index % 2 == 0 %}
 </div>

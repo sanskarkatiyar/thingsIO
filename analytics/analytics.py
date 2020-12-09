@@ -63,14 +63,15 @@ def plot_moving_average(series, field, window=10, plot_intervals=False, scale=1.
     return img_bytes
 
 def exponential_smoothing(series, alpha):
-
-    result = [series[0]] # first value is same as series
+    if len(series) > 0:
+        result = [series[0]]
+    else:
+        result = []
     for n in range(1, len(series)):
         result.append(alpha * series[n] + (1 - alpha) * result[n-1])
     return result
 
-def plot_exponential_smoothing(series, field, alphas=[0.05,0.3],  filename='exponential_smoothing.png'):
- 
+def plot_exponential_smoothing(series, field, alphas=[0.05,0.3], filename='exponential_smoothing.png'):
     plt.figure(figsize=(17, 8))
     for alpha in alphas:
         plt.plot(exponential_smoothing(series, alpha), label="Alpha {}".format(alpha))
@@ -79,13 +80,12 @@ def plot_exponential_smoothing(series, field, alphas=[0.05,0.3],  filename='expo
     plt.axis('tight')
     plt.title('Exponential Smoothing - {}'.format(field))
     plt.grid(True)
-    plt.savefig(filename)
-    with Image.open(filename) as image:
-        img_bytes = io.BytesIO(image)
+    img_bytes = io.BytesIO()
+    plt.savefig(img_bytes, format='png')
+    img_bytes.seek(0)
     return img_bytes
 
 def double_exponential_smoothing(series, alpha, beta):
-
     result = [series[0]]
     for n in range(1, len(series)+1):
         if n == 1:
@@ -110,9 +110,9 @@ def plot_double_exponential_smoothing(series, field, alphas=[0.9,0.02], betas=[0
     plt.axis('tight')
     plt.title('Double Exponential Smoothing - {}'.format(field))
     plt.grid(True)
-    plt.savefig(filename)
-    with Image.open(filename) as image:
-        img_bytes = io.BytesIO(image)
+    img_bytes = io.BytesIO()
+    plt.savefig(img_bytes, format='png')
+    img_bytes.seek(0)
     return img_bytes
 
 # def tsplot(y, field, lags=30, figsize=(12, 7), syle='bmh', filename='ts_plot.png'):
