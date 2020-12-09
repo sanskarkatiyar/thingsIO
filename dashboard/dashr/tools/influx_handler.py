@@ -2,6 +2,7 @@ import os
 import sys
 from influxdb import InfluxDBClient
 from influxdb import DataFrameClient
+from pandas import DataFrame
 
 class influx_handler:
 
@@ -18,6 +19,9 @@ class influx_handler:
     def getDatafromUUID(self, API_KEY):
         q = 'SELECT * FROM \"'+ API_KEY +'\" ;'
         result = self.ReadClient.query(q)
-        df = result[API_KEY]
-        print(result, file=sys.stderr)
+        try:
+            df = result[API_KEY]
+        except KeyError:
+            return DataFrame()
+        # print(result, file=sys.stderr)
         return df

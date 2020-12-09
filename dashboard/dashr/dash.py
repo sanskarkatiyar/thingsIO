@@ -94,9 +94,11 @@ def page_dashboard():
 
     if len(my_schema) > 0:
         try:
+            # NOTE: Currently getting only last 50 points
             my_df = influx_db.getDatafromUUID(g.uuid)
-            my_data = num_df_to_js(my_df, my_schema)
-            my_map_data = loc_df_to_js(my_df, my_schema)
+            if len(my_df) > 0:
+                my_data = num_df_to_js(my_df[-50:-1], my_schema)
+                my_map_data = loc_df_to_js(my_df[-50:-1], my_schema)
         except InfluxDBClientError:
             pass # no entries in the database
 
@@ -239,4 +241,58 @@ def analytics_request_processor(event_id):
         del r["data"] # overloading data (unncessary)
         analytics_handler.store_job_request(uuid=g.uuid, jobid=j_id, jobdesc=jsonpickle.encode(r))
 
-        return redirect(url_for('dash.page_analytics'))
+        return redirect(url_for('dash.page_analytics', _anchor='nav-stat1'))
+
+    elif event_id == 'exponential_smoothing':
+        param_fields = request.form.getlist('stat2FieldsSel')
+        param_alpha1 = request.form["stat2InputAlpha1"]
+        param_alpha2 = request.form["stat2InputAlpha2"]
+
+        j_id = generate_job_id(event_id)
+
+        r = {
+                "data"  : df,
+                "params": { "fields": param_fields, "alpha1": float(param_alpha1), "alpha2": float(param_alpha2) },
+                "op"    : event_id,
+                "job_id": j_id,
+                "ts": time.asctime()
+        }
+        
+        x = io.BytesIO()
+        pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)
+        x.seek(0)
+
+        analytics_handler.send_msg_to_queue(data=x)
+
+        del r["data"] # overloading data (unncessary)
+        analytics_handler.store_job_request(uuid=g.uuid, jobid=j_id, jobdesc=jsonpickle.encode(r))
+
+        return redirect(url_for('dash.page_analytics', _anchor='nav-stat2'))
+
+    elif event_id == 'double_exponential_smoothing':
+        param_fields = request.form.getlist('stat3FieldsSel')
+        param_alpha1 = request.form["stat3InputAlpha1"]
+        param_alpha2 = request.form["stat3InputAlpha2"]
+        param_beta1 = request.form["stat3InputBeta1"]
+        param_beta2 = request.form["stat3InputBeta2"]
+
+        j_id = generate_job_id(event_id)
+
+        r = {
+                "data"  : df,
+                "params": { "fields": param_fields, "alpha1": float(param_alpha1), "alpha2": float(param_alpha2), "beta1": float(param_beta1), "beta2": float(param_beta2)},
+                "op"    : event_id,
+                "job_id": j_id,
+                "ts": time.asctime()
+        }
+        
+        x = io.BytesIO()
+        pickle.dump(r, x, pickle.HIGHEST_PROTOCOL)
+        x.seek(0)
+
+        analytics_handler.send_msg_to_queue(data=x)
+
+        del r["data"] # overloading data (unncessary)
+        analytics_handler.store_job_request(uuid=g.uuid, jobid=j_id, jobdesc=jsonpickle.encode(r))
+
+        return redirect(url_for('dash.page_analytics', _anchor='nav-stat3'))
