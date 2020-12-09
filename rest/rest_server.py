@@ -15,7 +15,6 @@ import dashboard.tools.schema_handler as schema_handler
 users_db = accounts_handler.accounts_handler()
 schema_db = schema_handler.schema_handler()
 
-
 # Initialize the Flask application
 app = Flask(__name__)
 
@@ -33,7 +32,7 @@ def sendJson(API_KEY):
         req_data_pickled = jsonpickle.encode(jsonData)
         rabbitMQHost = os.getenv("RABBITMQ_SERVICE_HOST") or "localhost"
 
-        print("Using host", rabbitMQHost)
+        # print("Using host", rabbitMQHost)
 
         rabbitMQ = pika.BlockingConnection(
                 pika.ConnectionParameters(host=rabbitMQHost))
@@ -45,9 +44,9 @@ def sendJson(API_KEY):
                             routing_key='data',
                             body=req_data_pickled)
         
-        print(" [x] Sent data ")
+        # print(" [x] Sent data ")
         rabbitMQ.close()
-        response = { 'Status' : "Data Sent"}
+        response = { 'Status' : 'OK' }
     
     else:
         response = { 'Status' : "UUID does not exist"}

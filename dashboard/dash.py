@@ -9,6 +9,8 @@ import pika
 import time
 import pickle
 import hashlib
+from influxdb.exceptions import InfluxDBClientError
+import jsonpickle
 import io
 import csv
 
@@ -91,9 +93,13 @@ def page_dashboard():
     my_map_data = {}
 
     if len(my_schema) > 0:
-        my_df = influx_db.getDatafromUUID(g.uuid)
-        my_data = num_df_to_js(my_df, my_schema)
-        my_map_data = loc_df_to_js(my_df, my_schema)
+        try:
+            my_df = influx_db.getDatafromUUID(g.uuid)
+            my_data = num_df_to_js(my_df, my_schema)
+            my_map_data = loc_df_to_js(my_df, my_schema)
+        except InfluxDBClientError:
+            pass # no entries in the database
+
 
     return render_template(
         "dash/dashboard.html", 
@@ -138,21 +144,36 @@ def page_schema():
 def page_analytics():
     my_schema = schema_db.getSchemaFromUUID(g.uuid)
 
-    past_job_ids = analytics_handler.get_jobids_from_uuid(g.uuid)
+    # (2): get the uuid-jobids - organize the accordion - this is chronological order
+    # (3): get the uuid-results - do list comprehension on previous jobids
+    # (4): get the uuid-requests -    [-do-]
 
-    job_results = []
-    for j in past_job_ids:
-        r = analytics_handler.get_results_for_job(j)
-        if r is not None:
-            job_results = job_results + [base64.b64encode(x.getvalue()).decode() for x in r]
+    user_jobs    = list(filter(lambda x: x is not None, analytics_handler.get_jobids_from_uuid(g.uuid)))
+    user_reqs    = []
+    user_results = []
 
+    for jid in user_jobs:
+        user_reqs.append(analytics_handler.get_job_request_from_jobid(jid))
+
+        t = analytics_handler.get_results_for_job(jid)
+        if t is not None:
+            user_results.append(list(map(
+                lambda x: base64.b64encode(x.getvalue()).decode(), t
+                )
+            ))
+        else:
+            user_results.append(None)
+
+    # template rendering
+    # NOTE: (to future self, I am sorry!) terrible processing model!
 
     return render_template(
         "dash/analytics.html", 
         title="Analytics", 
         api_key=g.uuid,
         my_schema=my_schema,
-        job_results=job_results
+        user_results=user_results,
+        user_reqs=user_reqs
     )
 
 def generate_job_id(aux_data=""):
@@ -163,6 +184,7 @@ def generate_job_id(aux_data=""):
 @bp.route("/process/<event_id>", methods=["GET", "POST"])
 @login_required
 def analytics_request_processor(event_id):
+
     df = influx_db.getDatafromUUID(g.uuid)
 
     if event_id == 'export':
@@ -204,7 +226,8 @@ def analytics_request_processor(event_id):
                 "data"  : df,
                 "params": { "fields": param_fields, "window": param_window },
                 "op"    : event_id,
-                "job_id": j_id
+                "job_id": j_id,
+                "ts": time.asctime()
         }
         
         x = io.BytesIO()
@@ -212,6 +235,8 @@ def analytics_request_processor(event_id):
         x.seek(0)
 
         analytics_handler.send_msg_to_queue(data=x)
-        analytics_handler.store_jobid_to_redis(uuid=g.uuid, jobid=j_id)
+
+        del r["data"] # overloading data (unncessary)
+        analytics_handler.store_job_request(uuid=g.uuid, jobid=j_id, jobdesc=jsonpickle.encode(r))
 
         return redirect(url_for('dash.page_analytics'))
