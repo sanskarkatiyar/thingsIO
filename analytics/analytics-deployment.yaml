@@ -22,7 +22,3 @@ spec:
       containers:
       - name: analytics
         image: "docker.io/sanskarkatiyar/thingsio-analytics:latest"
-        resources:
-          requests:
-            cpu: 200m
-            memory: 512Mi

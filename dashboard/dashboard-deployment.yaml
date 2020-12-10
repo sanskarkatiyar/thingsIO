@@ -20,7 +20,6 @@ spec:
         image: "docker.io/sanskarkatiyar/thingsio-dashboard:latest"
         resources:
           requests:
-            cpu: 200m
-            memory: 512Mi
+            memory: 256Mi
         ports:
         - containerPort: 5000

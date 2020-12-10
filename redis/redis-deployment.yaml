@@ -17,8 +17,8 @@ spec:
         image: redis
         resources:
           requests:
-            cpu: 200m
-            memory: 1Gi
+            cpu: 100m
+            memory: 512Mi
         ports:
         - containerPort: 6379
 ---
