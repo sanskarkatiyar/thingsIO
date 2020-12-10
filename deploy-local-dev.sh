@@ -14,6 +14,7 @@ kubectl apply -f rest/rest-deployment.yaml
 kubectl apply -f rest/rest-service.yaml
 kubectl apply -f analytics/analytics-deployment.yaml
 kubectl apply -f ingestor/ingestor-deployment.yaml
+kubectl apply -f logs/logs-deployment.yaml
 # kubectl apply -f rest/rest-ingress.yaml
 kubectl port-forward --address 0.0.0.0 service/rabbitmq 5672:5672 &
 kubectl port-forward --address 0.0.0.0 service/redis 6379:6379 &

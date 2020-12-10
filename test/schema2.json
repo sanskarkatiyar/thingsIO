@@ -1,0 +1,30 @@
+{
+    "field_1": {
+        "name": "temperature1",
+        "type": "numeric"
+    },
+    "field_2": {
+        "name": "pressure1",
+        "type": "numeric"
+    },
+    "field_3": {
+        "name": "pressure2",
+        "type": "numeric"
+    },
+    "field_4": {
+        "name": "humidity1",
+        "type": "numeric"
+    },
+    "field_5": {
+        "name": "temperature2",
+        "type": "numeric"
+    },
+    "field_6": {
+        "name": "humidity",
+        "type": "numeric"
+    },
+    "field_7": {
+        "name": "gps",
+        "type": "location"
+    }
+}

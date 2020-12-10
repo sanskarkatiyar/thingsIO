@@ -13,3 +13,4 @@ kubectl apply -f rest/rest-service.yaml
 kubectl apply -f analytics/analytics-deployment.yaml
 kubectl apply -f ingestor/ingestor-deployment.yaml
 kubectl apply -f rest/rest-ingress.yaml
+kubectl apply -f logs/logs-deployment.yaml

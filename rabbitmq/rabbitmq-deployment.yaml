@@ -8,7 +8,7 @@ spec:
       app: rabbitmq
       role: master
       tier: backend
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -21,8 +21,8 @@ spec:
         image: rabbitmq
         resources:
           requests:
-            cpu: 100m
-            memory: 500Mi
+            cpu: 250m
+            memory: 512Mi
         ports:
         - containerPort: 5672
 ---

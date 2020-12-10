@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: redis
-  replicas: 1
+  replicas: 2
   template:
     metadata:
       labels:
@@ -17,8 +17,8 @@ spec:
         image: redis
         resources:
           requests:
-            cpu: 100m
-            memory: 400Mi
+            cpu: 200m
+            memory: 1Gi
         ports:
         - containerPort: 6379
 ---

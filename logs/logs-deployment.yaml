@@ -21,4 +21,4 @@ spec:
     spec:
       containers:
       - name: logs
-        image: "docker.io/sanskarkatiyar/thingsio-logger:latest"
+        image: "docker.io/sanskarkatiyar/thingsio-logs:latest"
