@@ -6,7 +6,7 @@ kind: Deployment
 metadata:
   name: dashboard-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: dashboard
@@ -18,8 +18,5 @@ spec:
       containers:
       - name: dashboard
         image: "docker.io/sanskarkatiyar/thingsio-dashboard:latest"
-        resources:
-          requests:
-            memory: 256Mi
         ports:
         - containerPort: 5000
