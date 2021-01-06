@@ -180,14 +180,14 @@ def receive():
     rabbitMQ = pika.BlockingConnection(pika.ConnectionParameters(host=rabbitMQHost))
     rabbitMQChannel = rabbitMQ.channel()
 
-    # rabbitMQChannel.exchange_declare(exchange='toAnalytics',exchange_type='direct')
+    rabbitMQChannel.exchange_declare(exchange='toAnalytics',exchange_type='direct')
 
-    # result = rabbitMQChannel.queue_declare(queue='', exclusive=True)
-    # queue_name = result.method.queue
+    result = rabbitMQChannel.queue_declare(queue='', exclusive=True)
+    queue_name = result.method.queue
 
-    # rabbitMQChannel.queue_bind(exchange='toAnalytics', queue=queue_name, routing_key='data')
+    rabbitMQChannel.queue_bind(exchange='toAnalytics', queue=queue_name, routing_key='data')
 
-    rabbitMQChannel.queue_declare(queue="queue_toAnalytics", durable=True)
+    # rabbitMQChannel.queue_declare(queue="queue_toAnalytics", durable=True)
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
 
@@ -214,7 +214,7 @@ def receive():
                 result.append(tsplot(df.iloc[:, i], fieldset[i], lags=params['lags']))
         # print(result)
         analytics_db.jobid_result_db.set(jobid,jsonpickle.encode(result))
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+        # ch.basic_ack(delivery_tag=method.delivery_tag)
             # if(operation == 'sarima_stats'):
             #     ps = range(0, 4)
             #     d = 1
@@ -235,8 +235,8 @@ def receive():
             #     print(mean_absolute_percentage_error(df.iloc[:, i][s+d:], best_model.fittedvalues[s+d:]))
 
     rabbitMQChannel.basic_qos(prefetch_count=1)
-    # rabbitMQChannel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    rabbitMQChannel.basic_consume(queue="queue_toAnalytics", on_message_callback=callback)
+    rabbitMQChannel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+    # rabbitMQChannel.basic_consume(queue="queue_toAnalytics", on_message_callback=callback)
     rabbitMQChannel.start_consuming()
     print("done")
 

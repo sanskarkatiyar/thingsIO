@@ -24,7 +24,11 @@
         "type": "numeric"
     },
     "field_7": {
-        "name": "gps",
+        "name": "gps1",
+        "type": "location"
+    },
+    "field_8": {
+        "name": "gps2",
         "type": "location"
     }
 }

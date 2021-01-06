@@ -3,6 +3,8 @@ import pika
 import redis
 import jsonpickle
 
+
+
 class analytics_handler:
     def __init__(self, MQ_HOST="localhost", redisHost="localhost"):
         self.mq_host = os.getenv("RABBITMQ_SERVICE_HOST") or MQ_HOST
@@ -12,21 +14,33 @@ class analytics_handler:
         self.jobid_result_db = redis.Redis(host=self.redisHost, db=5)
         self.jobid_request_db = redis.Redis(host=self.redisHost, db=6)
 
+    def sendLogs(self, logdata):
+        rabbitMQ = pika.BlockingConnection(
+                pika.ConnectionParameters(host=self.rabbitMQHost))
+        rabbitMQChannel = rabbitMQ.channel()
 
+        rabbitMQChannel.exchange_declare(exchange='logs',
+                                exchange_type='direct')
+        rabbitMQChannel.basic_publish(exchange='logs',
+                            routing_key='logdata',
+                            body=logdata)
+        
+        rabbitMQ.close()
+        
     def send_msg_to_queue(self, data, exchange_name="toAnalytics", routing_key="data"):
         rabbitMQ = pika.BlockingConnection(pika.ConnectionParameters(host=self.mq_host))
         rabbitMQChannel = rabbitMQ.channel()
-        rabbitMQChannel.queue_declare(queue="queue_{}".format(exchange_name), durable=True)
-        # rabbitMQChannel.exchange_declare(exchange=exchange_name, exchange_type='direct')
-        # rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=jsonpickle.encode(data))
-
-        rabbitMQChannel.basic_publish(
-                                        exchange='',
-                                        routing_key='queue_{}'.format(exchange_name),
-                                        body=jsonpickle.encode(data),
-                                        properties=pika.BasicProperties(
-                                            delivery_mode=2,  # make message persistent
-                                    ))
+        # rabbitMQChannel.queue_declare(queue="queue_{}".format(exchange_name), durable=True)
+        rabbitMQChannel.exchange_declare(exchange=exchange_name, exchange_type='direct')
+        rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=jsonpickle.encode(data))
+        self.sendLogs('DASH - Sent job for analytics operation.')
+        # rabbitMQChannel.basic_publish(
+        #                                 exchange='',
+        #                                 routing_key='queue_{}'.format(exchange_name),
+        #                                 body=jsonpickle.encode(data),
+        #                                 properties=pika.BasicProperties(
+        #                                     delivery_mode=2,  # make message persistent
+        #                             ))
         rabbitMQ.close()
 
     def store_jobid_to_redis(self, uuid, jobid):

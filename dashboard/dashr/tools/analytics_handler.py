@@ -16,17 +16,17 @@ class analytics_handler:
     def send_msg_to_queue(self, data, exchange_name="toAnalytics", routing_key="data"):
         rabbitMQ = pika.BlockingConnection(pika.ConnectionParameters(host=self.mq_host))
         rabbitMQChannel = rabbitMQ.channel()
-        rabbitMQChannel.queue_declare(queue="queue_{}".format(exchange_name), durable=True)
-        # rabbitMQChannel.exchange_declare(exchange=exchange_name, exchange_type='direct')
-        # rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=jsonpickle.encode(data))
+        # rabbitMQChannel.queue_declare(queue="queue_{}".format(exchange_name), durable=True)
+        rabbitMQChannel.exchange_declare(exchange=exchange_name, exchange_type='direct')
+        rabbitMQChannel.basic_publish(exchange=exchange_name, routing_key=routing_key, body=jsonpickle.encode(data))
 
-        rabbitMQChannel.basic_publish(
-                                        exchange='',
-                                        routing_key='queue_{}'.format(exchange_name),
-                                        body=jsonpickle.encode(data),
-                                        properties=pika.BasicProperties(
-                                            delivery_mode=2,  # make message persistent
-                                    ))
+        # rabbitMQChannel.basic_publish(
+        #                                 exchange='',
+        #                                 routing_key='queue_{}'.format(exchange_name),
+        #                                 body=jsonpickle.encode(data),
+        #                                 properties=pika.BasicProperties(
+        #                                     delivery_mode=2,  # make message persistent
+        #                             ))
         rabbitMQ.close()
 
     def store_jobid_to_redis(self, uuid, jobid):
